@@ -2,16 +2,15 @@ package com.erw.mp3player
 
 import android.annotation.SuppressLint
 import android.media.MediaPlayer
+import android.os.*
 import androidx.appcompat.app.AppCompatActivity
-import android.os.Bundle
-import android.os.Handler
-import android.os.Looper
-import android.os.Message
 import android.provider.MediaStore
 import android.view.View
 import android.widget.Button
 import android.widget.SeekBar
 import android.widget.TextView
+import androidx.annotation.RequiresApi
+import com.erw.mp3player.services.FileSystemScanService
 
 class MainActivity : AppCompatActivity() {
 
@@ -22,8 +21,10 @@ class MainActivity : AppCompatActivity() {
     private lateinit var remainingTimeLabel: TextView
     private var totalTime: Int = 0
 
+    @RequiresApi(Build.VERSION_CODES.O)
     override fun onCreate(savedInstanceState: Bundle?) {
         super.onCreate(savedInstanceState)
+
         setContentView(R.layout.activity_main)
 
         mp = MediaPlayer.create(this, R.raw.test_music)
@@ -111,9 +112,9 @@ class MainActivity : AppCompatActivity() {
         return timeLabel
     }
 
-    fun playBtnClick(v: View){
+    fun playBtnClick(v: View) {
         val playBtn: Button = findViewById(R.id.playBtn)
-        if(mp.isPlaying){
+        if (mp.isPlaying) {
             mp.pause()
             playBtn.setBackgroundResource(R.drawable.play)
         } else {
