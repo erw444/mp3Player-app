@@ -1,18 +1,19 @@
 package com.erw.mp3player
 
 import android.annotation.SuppressLint
+import android.media.AudioManager
 import android.media.MediaPlayer
+import android.net.Uri
 import android.os.*
-import androidx.appcompat.app.AppCompatActivity
-import android.provider.MediaStore
 import android.view.View
 import android.widget.Button
 import android.widget.SeekBar
 import android.widget.TextView
 import androidx.annotation.RequiresApi
-import com.erw.mp3player.services.FileSystemScanService
+import androidx.appcompat.app.AppCompatActivity
+import java.io.File
 
-class MainActivity : AppCompatActivity() {
+class PlayMusicActivity : AppCompatActivity() {
 
     private lateinit var mp: MediaPlayer
     private lateinit var volumeBar: SeekBar
@@ -25,30 +26,16 @@ class MainActivity : AppCompatActivity() {
     override fun onCreate(savedInstanceState: Bundle?) {
         super.onCreate(savedInstanceState)
 
-        setContentView(R.layout.activity_main)
+        setContentView(R.layout.activity_play_music)
 
-        mp = MediaPlayer.create(this, R.raw.test_music)
+        val file = intent.getSerializableExtra("fileToPlay")
+        val mp3 : File = file as File
+        mp = MediaPlayer.create(this, Uri.fromFile(mp3))
         mp.isLooping = true
         mp.setVolume(0.5f, 0.5f)
         totalTime = mp.duration
 
-        volumeBar = findViewById(R.id.volumeBar)
-        volumeBar.setOnSeekBarChangeListener(
-            object: SeekBar.OnSeekBarChangeListener {
-                override fun onProgressChanged(seekBar: SeekBar?, progress: Int, fromUser: Boolean) {
-                    if(fromUser){
-                        var volumeNum = progress / 100.0f
-                        mp.setVolume(volumeNum, volumeNum)
-                    }
-                }
-
-                override fun onStartTrackingTouch(p0: SeekBar?) {
-                }
-
-                override fun onStopTrackingTouch(p0: SeekBar?) {
-                }
-            }
-        )
+        volumeControlStream = AudioManager.STREAM_MUSIC
 
         positionBar = findViewById(R.id.positionBar)
         positionBar.max = totalTime
@@ -68,6 +55,10 @@ class MainActivity : AppCompatActivity() {
             }
         )
 
+        val playBtn: Button = findViewById(R.id.playBtn)
+        mp.start()
+        playBtn.setBackgroundResource(R.drawable.stop)
+
         Thread(Runnable {
             while(mp != null){
                try {
@@ -81,6 +72,14 @@ class MainActivity : AppCompatActivity() {
             }
         }).start()
 
+    }
+
+    override fun onBackPressed() {
+        super.onBackPressed()
+        if (mp.isPlaying) {
+            mp.stop()
+        }
+        mp.release()
     }
 
     @SuppressLint("HandlerLeak")
