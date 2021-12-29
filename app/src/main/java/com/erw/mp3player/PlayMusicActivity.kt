@@ -80,6 +80,7 @@ class PlayMusicActivity : AppCompatActivity() {
             mp.stop()
         }
         mp.release()
+        finish()
     }
 
     @SuppressLint("HandlerLeak")
