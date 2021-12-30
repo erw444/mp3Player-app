@@ -7,28 +7,30 @@ import android.widget.TextView
 import androidx.recyclerview.widget.RecyclerView
 import com.erw.mp3player.R
 import com.erw.mp3player.adapters.OnItemClickListener
+import com.erw.mp3player.adapters.OnSongClickListener
+import com.erw.mp3player.services.FileSystemScanService
 import java.io.File
 
-class FileViewHolder(itemView: View) : RecyclerView.ViewHolder(itemView) {
+class SongViewHolder(itemView: View) : RecyclerView.ViewHolder(itemView) {
     private var listItemView: TextView? = null
 
     init {
         listItemView = itemView.findViewById(R.id.list_item_name)
     }
 
-    fun bind(file: File, clickListener: OnItemClickListener) {
-        listItemView!!.text = file.name
+    fun bind(song: FileSystemScanService.MP3, clickListener: OnSongClickListener) {
+        listItemView!!.text = song.name
 
         itemView.setOnClickListener {
-            clickListener.onItemClicked(file)
+            clickListener.onItemClicked(song)
         }
     }
 
     companion object {
-        fun create(parent: ViewGroup): FileViewHolder {
+        fun create(parent: ViewGroup): SongViewHolder {
             val view: View = LayoutInflater.from(parent.context)
                 .inflate(R.layout.recyclerview_list_item, parent, false)
-            return FileViewHolder(view)
+            return SongViewHolder(view)
         }
     }
 }

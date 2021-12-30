@@ -10,7 +10,7 @@ import androidx.core.app.ActivityCompat
 import androidx.core.content.ContextCompat
 import androidx.recyclerview.widget.LinearLayoutManager
 import androidx.recyclerview.widget.RecyclerView
-import com.erw.mp3player.adapters.FileAdapter
+import com.erw.mp3player.adapters.AlbumAdapter
 import com.erw.mp3player.adapters.OnItemClickListener
 import com.erw.mp3player.services.FileSystemScanService
 import java.io.File
@@ -18,10 +18,10 @@ import java.io.File
 
 
 
-class FileNavigationActivity () : AppCompatActivity(), OnItemClickListener {
+class AlbumNavigationActivity () : AppCompatActivity(), OnItemClickListener {
 
     companion object {
-        private const val STORAGE_PERMISSION_CODE = 100
+            private const val STORAGE_PERMISSION_CODE = 100
     }
 
     override fun onCreate(savedInstanceState: Bundle?){
@@ -29,37 +29,22 @@ class FileNavigationActivity () : AppCompatActivity(), OnItemClickListener {
 
        checkPermission(Manifest.permission.READ_EXTERNAL_STORAGE, STORAGE_PERMISSION_CODE)
 
-        setContentView(R.layout.activity_file_navigation)
+        setContentView(R.layout.activity_album_navigation)
 
-        val musicDirectories: Array<File>
-
-        if(intent != null && intent.hasExtra("directory")) {
-            var directoryPath = intent.getStringExtra("directory")
-            musicDirectories = FileSystemScanService.getFilesInDirectory(directoryPath)
-        } else {
-            musicDirectories = FileSystemScanService.getMusicDirectory()
-        }
-        //val mp3s = FileSystemScanService.getMP3sScopedStorage(this)
+        val albumsToMp3s = FileSystemScanService.getAlbumsToMP3sFromMediaStore(this)
 
         val recyclerView = findViewById<RecyclerView>(R.id.recycler_list_view)
-        var adapter = FileAdapter(FileAdapter.ListDiff(), musicDirectories, this)
+        var adapter = AlbumAdapter(AlbumAdapter.ListDiff(), albumsToMp3s.keys.toTypedArray(), this)
         recyclerView.adapter = adapter
         recyclerView.layoutManager = LinearLayoutManager(this)
     }
 
-    override fun onItemClicked(file: File) {
-        if(file.isFile){
-            val intent = Intent(this, PlayMusicActivity::class.java).apply {
-                putExtra("fileToPlay", file)
-            }
-            startActivity(intent)
-        } else {
-            val intent = Intent(this, FileNavigationActivity::class.java).apply {
-                putExtra("directory", file.path)
-            }
-            startActivity(intent)
+    override fun onItemClicked(album: FileSystemScanService.Album) {
+        val intent = Intent(this, SongNavigationActivity::class.java).apply {
+            putExtra("album", album)
         }
 
+        startActivity(intent)
     }
 
 

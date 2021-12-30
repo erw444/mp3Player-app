@@ -3,20 +3,24 @@ package com.erw.mp3player
 import android.annotation.SuppressLint
 import android.media.AudioManager
 import android.media.MediaPlayer
+import android.media.MediaPlayer.OnCompletionListener
 import android.net.Uri
 import android.os.*
+import android.util.Log
+import android.util.Log.i
 import android.view.View
 import android.widget.Button
 import android.widget.SeekBar
 import android.widget.TextView
 import androidx.annotation.RequiresApi
 import androidx.appcompat.app.AppCompatActivity
+import com.erw.mp3player.services.FileSystemScanService
 import java.io.File
 
 class PlayMusicActivity : AppCompatActivity() {
 
     private lateinit var mp: MediaPlayer
-    private lateinit var volumeBar: SeekBar
+    private lateinit var playBtn: Button
     private lateinit var positionBar: SeekBar
     private lateinit var elapsedTimeLabel: TextView
     private lateinit var remainingTimeLabel: TextView
@@ -28,12 +32,16 @@ class PlayMusicActivity : AppCompatActivity() {
 
         setContentView(R.layout.activity_play_music)
 
+
         val file = intent.getSerializableExtra("fileToPlay")
-        val mp3 : File = file as File
-        mp = MediaPlayer.create(this, Uri.fromFile(mp3))
-        mp.isLooping = true
+        val mp3 = file as FileSystemScanService.MP3
+        mp = MediaPlayer.create(this, Uri.parse(mp3.uri))
         mp.setVolume(0.5f, 0.5f)
         totalTime = mp.duration
+        mp.setOnCompletionListener { mp ->
+            Log.i("ONComplete Media palyer", "onComplete hit")
+            playBtn.setBackgroundResource(R.drawable.play)
+        }
 
         volumeControlStream = AudioManager.STREAM_MUSIC
 
@@ -55,9 +63,9 @@ class PlayMusicActivity : AppCompatActivity() {
             }
         )
 
-        val playBtn: Button = findViewById(R.id.playBtn)
-        mp.start()
+        playBtn = findViewById(R.id.playBtn)
         playBtn.setBackgroundResource(R.drawable.stop)
+        mp.start()
 
         Thread(Runnable {
             while(mp != null){
@@ -113,7 +121,7 @@ class PlayMusicActivity : AppCompatActivity() {
     }
 
     fun playBtnClick(v: View) {
-        val playBtn: Button = findViewById(R.id.playBtn)
+
         if (mp.isPlaying) {
             mp.pause()
             playBtn.setBackgroundResource(R.drawable.play)

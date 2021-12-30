@@ -12,13 +12,14 @@
         android:roundIcon="@mipmap/ic_launcher_round"
         android:supportsRtl="true"
         android:theme="@style/Theme.MP3Player">
-        <activity android:name=".FileNavigationActivity">
+        <activity android:name=".AlbumNavigationActivity">
             <intent-filter>
                 <action android:name="android.intent.action.MAIN" />
 
                 <category android:name="android.intent.category.LAUNCHER" />
             </intent-filter>
         </activity>
+        <activity android:name=".SongNavigationActivity"/>
         <activity android:name=".PlayMusicActivity"
             android:screenOrientation="portrait" />
     </application>
