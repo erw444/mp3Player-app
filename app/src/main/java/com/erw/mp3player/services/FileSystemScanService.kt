@@ -21,13 +21,13 @@ object FileSystemScanService {
                    val name: String = "",
                    val duration: Int = 0,
                    val size: Int = 0,
-                   val albumId: Int = -1,
+                   val albumId: Long = -1,
                    val albumName: String = "",
                    val artist: String = "",
                    val isMusic: Int = 0
                    ) : Serializable
 
-    data class Album(val albumId: Int,
+    data class Album(val albumId: Long,
                      val name: String = ""
                      ) : Serializable
 
@@ -52,9 +52,8 @@ object FileSystemScanService {
         return albumsToMp3s
     }
 
-    fun getMp3sFromMediaStore(context:Context) : List<MP3> {
-
-        val collection =
+    fun getExternalStorage(): Uri{
+        val externalStorageUri =
             if (Build.VERSION.SDK_INT >= Build.VERSION_CODES.Q) {
                 MediaStore.Audio.Media.getContentUri(
                     MediaStore.VOLUME_EXTERNAL
@@ -62,6 +61,13 @@ object FileSystemScanService {
             } else {
                 MediaStore.Audio.Media.EXTERNAL_CONTENT_URI
             }
+
+        return externalStorageUri
+    }
+
+    fun getMp3sFromMediaStore(context:Context) : List<MP3> {
+
+        val collection = getExternalStorage()
 
         val projection = arrayOf(
             MediaStore.Audio.Media._ID,
@@ -71,7 +77,7 @@ object FileSystemScanService {
             MediaStore.Audio.Media.ALBUM_ID,
             MediaStore.Audio.Media.ALBUM,
             MediaStore.Audio.Media.ARTIST,
-            MediaStore.Audio.Media.IS_MUSIC,
+            MediaStore.Audio.Media.IS_MUSIC
         )
 
         // Show only videos that are at least 5 minutes in duration.
@@ -106,7 +112,7 @@ object FileSystemScanService {
                 val name = cursor.getString(nameColumn)
                 val duration = cursor.getInt(durationColumn)
                 val size = cursor.getInt(sizeColumn)
-                val albumId = cursor.getInt(albumIdColumn)
+                val albumId = cursor.getLong(albumIdColumn)
                 val album = cursor.getString(albumColumn)
                 val artist = cursor.getString(artistColumn)
                 val isMusic = cursor.getInt(isMusicColumn)

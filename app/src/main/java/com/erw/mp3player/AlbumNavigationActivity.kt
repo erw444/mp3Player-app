@@ -20,7 +20,7 @@ class AlbumNavigationActivity () : AppCompatActivity(), OnAlbumItemClickListener
     companion object {
             private const val STORAGE_PERMISSION_CODE = 100
 
-            public const val intentAlbumToPlay = "albumToPlay"
+            const val intentAlbumToPlay = "albumToPlay"
     }
 
     override fun onCreate(savedInstanceState: Bundle?){

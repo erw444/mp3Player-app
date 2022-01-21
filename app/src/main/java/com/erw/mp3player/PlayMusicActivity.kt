@@ -1,6 +1,7 @@
 package com.erw.mp3player
 
 import android.annotation.SuppressLint
+import android.content.ContentUris
 import android.media.AudioManager
 import android.media.MediaPlayer
 import android.net.Uri
@@ -9,6 +10,7 @@ import android.provider.MediaStore
 import android.util.Log
 import android.view.View
 import android.widget.Button
+import android.widget.ImageView
 import android.widget.SeekBar
 import android.widget.TextView
 import androidx.annotation.RequiresApi
@@ -26,6 +28,7 @@ class PlayMusicActivity : AppCompatActivity() {
     private lateinit var positionBar: SeekBar
     private lateinit var elapsedTimeLabel: TextView
     private lateinit var remainingTimeLabel: TextView
+    private lateinit var albumArtView: ImageView
     private var totalTime: Int = 0
     private var mp3s: List<MP3> = ArrayList<MP3>()
     private var toPlayMp3Id = 0
@@ -46,6 +49,11 @@ class PlayMusicActivity : AppCompatActivity() {
         } else if(intent.hasExtra(intentSongToPlay)){
             mp3 = intent.getSerializableExtra(intentSongToPlay) as MP3
         }
+
+        albumArtView = findViewById(R.id.albumArt)
+        val songCover: Uri = Uri.parse("content://media/external/audio/albumart");
+        val uriSongCover: Uri = ContentUris.withAppendedId(songCover, mp3.albumId)
+        albumArtView.setImageURI(uriSongCover)
 
         positionBar = findViewById(R.id.positionBar)
         mp = createMediaPlayer(mp3.uri)
