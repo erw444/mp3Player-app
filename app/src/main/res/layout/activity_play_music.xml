@@ -1,50 +1,58 @@
 <?xml version="1.0" encoding="utf-8"?>
-<LinearLayout
-xmlns:android="http://schemas.android.com/apk/res/android"
-xmlns:tools="http://schemas.android.com/tools"
-xmlns:app="http://schemas.android.com/apk/res-auto"
-android:layout_width="match_parent"
-android:layout_height="match_parent"
-tools:context=".PlayMusicActivity"
-android:orientation="vertical"
-android:gravity="center">
-
-<ImageView
-    android:id="@+id/albumArt"
-    android:layout_width="wrap_content"
-    android:layout_height="wrap_content"
-    android:src="@drawable/image"/>
-
-<SeekBar
-    android:id="@+id/positionBar"
-    android:layout_width="300dp"
-    android:layout_height="wrap_content"
-    android:layout_marginTop="30dp"/>
-
-<LinearLayout
+<LinearLayout xmlns:android="http://schemas.android.com/apk/res/android"
+    xmlns:app="http://schemas.android.com/apk/res-auto"
+    xmlns:tools="http://schemas.android.com/tools"
     android:layout_width="match_parent"
-    android:layout_height="wrap_content">
-    <TextView
-        android:id="@+id/elapsedTimeLabel"
-        android:layout_width="wrap_content"
-        android:layout_height="wrap_content"
-        android:text="0:11"
-        android:layout_marginLeft="40dp"/>
+    android:layout_height="match_parent"
+    android:gravity="center"
+    android:orientation="vertical"
+    tools:context=".PlayMusicActivity">
 
     <TextView
-        android:id="@+id/remainingTimeLabel"
+        android:id="@+id/songTitle"
         android:layout_width="wrap_content"
         android:layout_height="wrap_content"
-        android:text="-1:11"
-        android:layout_marginLeft="240dp"/>
-</LinearLayout>
+        android:text="@string/new_list_name_default"
+        style="@style/recycle_item_title"
+        />
 
-<Button
-    android:id="@+id/playBtn"
-    android:layout_width="30dp"
-    android:layout_height="30dp"
-    android:background="@drawable/play"
-    android:layout_marginTop="40dp"
-    android:onClick="playBtnClick"/>
+    <ImageView
+        android:id="@+id/albumArt"
+        android:layout_width="wrap_content"
+        android:layout_height="wrap_content"
+        android:src="@drawable/image" />
+
+    <SeekBar
+        android:id="@+id/positionBar"
+        android:layout_width="300dp"
+        android:layout_height="wrap_content"
+        android:layout_marginTop="30dp" />
+
+    <LinearLayout
+        android:layout_width="match_parent"
+        android:layout_height="wrap_content">
+
+        <TextView
+            android:id="@+id/elapsedTimeLabel"
+            android:layout_width="wrap_content"
+            android:layout_height="wrap_content"
+            android:layout_marginLeft="40dp"
+            android:text="0:11" />
+
+        <TextView
+            android:id="@+id/remainingTimeLabel"
+            android:layout_width="wrap_content"
+            android:layout_height="wrap_content"
+            android:layout_marginLeft="240dp"
+            android:text="-1:11" />
+    </LinearLayout>
+
+    <Button
+        android:id="@+id/playBtn"
+        android:layout_width="30dp"
+        android:layout_height="30dp"
+        android:layout_marginTop="40dp"
+        android:background="@drawable/play"
+        android:onClick="playBtnClick" />
 
 </LinearLayout>

@@ -2,11 +2,9 @@ package com.erw.mp3player
 
 import android.annotation.SuppressLint
 import android.content.ContentUris
-import android.media.AudioManager
 import android.media.MediaPlayer
 import android.net.Uri
 import android.os.*
-import android.provider.MediaStore
 import android.util.Log
 import android.view.View
 import android.widget.Button
@@ -29,6 +27,7 @@ class PlayMusicActivity : AppCompatActivity() {
     private lateinit var elapsedTimeLabel: TextView
     private lateinit var remainingTimeLabel: TextView
     private lateinit var albumArtView: ImageView
+    private lateinit var songTitleView: TextView
     private var totalTime: Int = 0
     private var mp3s: List<MP3> = ArrayList<MP3>()
     private var toPlayMp3Id = 0
@@ -50,13 +49,10 @@ class PlayMusicActivity : AppCompatActivity() {
             mp3 = intent.getSerializableExtra(intentSongToPlay) as MP3
         }
 
+        songTitleView = findViewById(R.id.songTitle)
         albumArtView = findViewById(R.id.albumArt)
-        val songCover: Uri = Uri.parse("content://media/external/audio/albumart");
-        val uriSongCover: Uri = ContentUris.withAppendedId(songCover, mp3.albumId)
-        albumArtView.setImageURI(uriSongCover)
-
         positionBar = findViewById(R.id.positionBar)
-        mp = createMediaPlayer(mp3.uri)
+        mp = createMediaPlayer(mp3)
 
         playBtn = findViewById(R.id.playBtn)
         playBtn.setBackgroundResource(R.drawable.stop)
@@ -77,18 +73,23 @@ class PlayMusicActivity : AppCompatActivity() {
 
     }
 
-    private fun createMediaPlayer(uri: String) : MediaPlayer{
-        mp = MediaPlayer.create(this, android.net.Uri.parse(uri))
+    private fun createMediaPlayer(mp3: MP3) : MediaPlayer{
+        val songCover: Uri = Uri.parse("content://media/external/audio/albumart");
+        val uriSongCover: Uri = ContentUris.withAppendedId(songCover, mp3.albumId)
+        albumArtView.setImageURI(uriSongCover)
+        songTitleView.setText(mp3.name)
+        
+        mp = MediaPlayer.create(this, android.net.Uri.parse(mp3.uri))
         mp.setVolume(0.5f, 0.5f)
         totalTime = mp.duration
         mp.setOnCompletionListener {
             Log.i("ONComplete Media palyer", "onComplete hit")
 
             if(!mp3s.isEmpty() && mp3s.size != toPlayMp3Id){
-                var mp3 = mp3s[toPlayMp3Id]
+                var nextMp3 = mp3s[toPlayMp3Id]
                 toPlayMp3Id++
                 mp.release()
-                mp = createMediaPlayer(mp3.uri)
+                mp = createMediaPlayer(nextMp3)
                 mp.start()
             } else {
                 playBtn.setBackgroundResource(R.drawable.play)
