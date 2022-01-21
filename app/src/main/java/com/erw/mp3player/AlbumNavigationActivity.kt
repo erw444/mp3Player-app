@@ -11,17 +11,16 @@ import androidx.core.content.ContextCompat
 import androidx.recyclerview.widget.LinearLayoutManager
 import androidx.recyclerview.widget.RecyclerView
 import com.erw.mp3player.adapters.AlbumAdapter
-import com.erw.mp3player.adapters.OnItemClickListener
+import com.erw.mp3player.adapters.OnAlbumItemClickListener
 import com.erw.mp3player.services.FileSystemScanService
-import java.io.File
 
 
-
-
-class AlbumNavigationActivity () : AppCompatActivity(), OnItemClickListener {
+class AlbumNavigationActivity () : AppCompatActivity(), OnAlbumItemClickListener {
 
     companion object {
             private const val STORAGE_PERMISSION_CODE = 100
+
+            public const val intentAlbumToPlay = "albumToPlay"
     }
 
     override fun onCreate(savedInstanceState: Bundle?){
@@ -39,13 +38,22 @@ class AlbumNavigationActivity () : AppCompatActivity(), OnItemClickListener {
         recyclerView.layoutManager = LinearLayoutManager(this)
     }
 
-    override fun onItemClicked(album: FileSystemScanService.Album) {
+    override fun onAlbumClicked(album: FileSystemScanService.Album) {
         val intent = Intent(this, SongNavigationActivity::class.java).apply {
             putExtra("album", album)
         }
 
         startActivity(intent)
     }
+
+    override fun onPlayButtonClicked(album: FileSystemScanService.Album) {
+        val intent = Intent(this, PlayMusicActivity::class.java).apply {
+            putExtra(intentAlbumToPlay, album)
+        }
+
+        startActivity(intent)
+    }
+
 
 
     // Function to check and request permission.

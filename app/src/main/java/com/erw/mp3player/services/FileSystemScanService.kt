@@ -17,14 +17,14 @@ object FileSystemScanService {
     var albumsToMp3s: Map<Album, List<MP3>>
 
     // Container for information about each video.
-    data class MP3(val uri: String,
+    data class MP3(val uri: String = "",
                    val name: String = "",
-                   val duration: Int,
-                   val size: Int,
-                   val albumId: Int,
+                   val duration: Int = 0,
+                   val size: Int = 0,
+                   val albumId: Int = -1,
                    val albumName: String = "",
                    val artist: String = "",
-                   val isMusic: Int
+                   val isMusic: Int = 0
                    ) : Serializable
 
     data class Album(val albumId: Int,
@@ -35,6 +35,10 @@ object FileSystemScanService {
         mp3s = ArrayList<MP3>()
         albumsToMp3s = HashMap<Album, List<MP3>>()
 
+    }
+
+    fun getMP3sFromAlbum(album : Album) : List<MP3>{
+        return albumsToMp3s.getOrDefault(album, ArrayList<MP3>())
     }
 
     fun getAlbumsToMP3sFromMediaStore(context: Context) : Map<Album, List<MP3>> {

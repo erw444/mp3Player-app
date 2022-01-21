@@ -6,10 +6,8 @@ import android.view.ViewGroup
 import android.widget.TextView
 import androidx.recyclerview.widget.RecyclerView
 import com.erw.mp3player.R
-import com.erw.mp3player.adapters.OnItemClickListener
 import com.erw.mp3player.adapters.OnSongClickListener
 import com.erw.mp3player.services.FileSystemScanService
-import java.io.File
 
 class SongViewHolder(itemView: View) : RecyclerView.ViewHolder(itemView) {
     private var listItemView: TextView? = null

@@ -3,19 +3,21 @@ package com.erw.mp3player
 import android.annotation.SuppressLint
 import android.media.AudioManager
 import android.media.MediaPlayer
-import android.media.MediaPlayer.OnCompletionListener
 import android.net.Uri
 import android.os.*
+import android.provider.MediaStore
 import android.util.Log
-import android.util.Log.i
 import android.view.View
 import android.widget.Button
 import android.widget.SeekBar
 import android.widget.TextView
 import androidx.annotation.RequiresApi
 import androidx.appcompat.app.AppCompatActivity
+import com.erw.mp3player.AlbumNavigationActivity.Companion.intentAlbumToPlay
+import com.erw.mp3player.SongNavigationActivity.Companion.intentSongToPlay
 import com.erw.mp3player.services.FileSystemScanService
-import java.io.File
+import com.erw.mp3player.services.FileSystemScanService.Album
+import com.erw.mp3player.services.FileSystemScanService.MP3
 
 class PlayMusicActivity : AppCompatActivity() {
 
@@ -25,6 +27,8 @@ class PlayMusicActivity : AppCompatActivity() {
     private lateinit var elapsedTimeLabel: TextView
     private lateinit var remainingTimeLabel: TextView
     private var totalTime: Int = 0
+    private var mp3s: List<MP3> = ArrayList<MP3>()
+    private var toPlayMp3Id = 0
 
     @RequiresApi(Build.VERSION_CODES.O)
     override fun onCreate(savedInstanceState: Bundle?) {
@@ -32,20 +36,57 @@ class PlayMusicActivity : AppCompatActivity() {
 
         setContentView(R.layout.activity_play_music)
 
+        var mp3: MP3 = MP3()
+        if(intent.hasExtra(intentAlbumToPlay)){
+            val album = intent.getSerializableExtra(intentAlbumToPlay) as Album
+            mp3s = FileSystemScanService.getMP3sFromAlbum(album)
+            mp3 = mp3s[toPlayMp3Id]
+            toPlayMp3Id++
 
-        val file = intent.getSerializableExtra("fileToPlay")
-        val mp3 = file as FileSystemScanService.MP3
-        mp = MediaPlayer.create(this, Uri.parse(mp3.uri))
-        mp.setVolume(0.5f, 0.5f)
-        totalTime = mp.duration
-        mp.setOnCompletionListener { mp ->
-            Log.i("ONComplete Media palyer", "onComplete hit")
-            playBtn.setBackgroundResource(R.drawable.play)
+        } else if(intent.hasExtra(intentSongToPlay)){
+            mp3 = intent.getSerializableExtra(intentSongToPlay) as MP3
         }
 
-        volumeControlStream = AudioManager.STREAM_MUSIC
-
         positionBar = findViewById(R.id.positionBar)
+        mp = createMediaPlayer(mp3.uri)
+
+        playBtn = findViewById(R.id.playBtn)
+        playBtn.setBackgroundResource(R.drawable.stop)
+        mp.start()
+
+        Thread(Runnable {
+            while(mp != null && !this.isFinishing){
+               try {
+                   var msg = Message()
+                   msg.what = mp.currentPosition
+                   handler.sendMessage(msg)
+                   Thread.sleep(1000)
+               } catch (e: InterruptedException){
+
+               }
+            }
+        }).start()
+
+    }
+
+    private fun createMediaPlayer(uri: String) : MediaPlayer{
+        mp = MediaPlayer.create(this, android.net.Uri.parse(uri))
+        mp.setVolume(0.5f, 0.5f)
+        totalTime = mp.duration
+        mp.setOnCompletionListener {
+            Log.i("ONComplete Media palyer", "onComplete hit")
+
+            if(!mp3s.isEmpty() && mp3s.size != toPlayMp3Id){
+                var mp3 = mp3s[toPlayMp3Id]
+                toPlayMp3Id++
+                mp.release()
+                mp = createMediaPlayer(mp3.uri)
+                mp.start()
+            } else {
+                playBtn.setBackgroundResource(R.drawable.play)
+            }
+        }
+
         positionBar.max = totalTime
         positionBar.setOnSeekBarChangeListener(
             object: SeekBar.OnSeekBarChangeListener {
@@ -63,23 +104,7 @@ class PlayMusicActivity : AppCompatActivity() {
             }
         )
 
-        playBtn = findViewById(R.id.playBtn)
-        playBtn.setBackgroundResource(R.drawable.stop)
-        mp.start()
-
-        Thread(Runnable {
-            while(mp != null){
-               try {
-                   var msg = Message()
-                   msg.what = mp.currentPosition
-                   handler.sendMessage(msg)
-                   Thread.sleep(1000)
-               } catch (e: InterruptedException){
-
-               }
-            }
-        }).start()
-
+        return mp
     }
 
     override fun onBackPressed() {

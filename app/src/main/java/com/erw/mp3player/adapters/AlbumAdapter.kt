@@ -11,7 +11,7 @@ import com.erw.mp3player.services.FileSystemScanService
 class AlbumAdapter(
     diffCallback: DiffUtil.ItemCallback<FileSystemScanService.Album>,
     private val albums: Array<FileSystemScanService.Album>,
-    val itemClickListener: OnItemClickListener
+    val itemClickListener: OnAlbumItemClickListener
     ) : ListAdapter<FileSystemScanService.Album, RecyclerView.ViewHolder>(diffCallback){
 
 
@@ -47,6 +47,7 @@ class AlbumAdapter(
     }
 }
 
-interface OnItemClickListener{
-    fun onItemClicked(album: FileSystemScanService.Album)
+interface OnAlbumItemClickListener{
+    fun onAlbumClicked(album: FileSystemScanService.Album)
+    fun onPlayButtonClicked(album: FileSystemScanService.Album)
 }

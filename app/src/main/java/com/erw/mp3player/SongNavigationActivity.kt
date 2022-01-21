@@ -12,6 +12,11 @@ import java.io.File
 
 class SongNavigationActivity: AppCompatActivity(), OnSongClickListener {
 
+    companion object {
+
+        const val intentSongToPlay = "songToPlay"
+    }
+
     override fun onCreate(savedInstanceState: Bundle?){
         super.onCreate(savedInstanceState)
 
