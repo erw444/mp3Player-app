@@ -14,6 +14,7 @@ import android.widget.TextView
 import androidx.annotation.RequiresApi
 import androidx.appcompat.app.AppCompatActivity
 import com.erw.mp3player.AlbumNavigationActivity.Companion.intentAlbumToPlay
+import com.erw.mp3player.AlbumNavigationActivity.Companion.intentRandomPlay
 import com.erw.mp3player.SongNavigationActivity.Companion.intentSongToPlay
 import com.erw.mp3player.services.FileSystemScanService
 import com.erw.mp3player.services.FileSystemScanService.Album
@@ -29,8 +30,9 @@ class PlayMusicActivity : AppCompatActivity() {
     private lateinit var albumArtView: ImageView
     private lateinit var songTitleView: TextView
     private var totalTime: Int = 0
-    private var mp3s: List<MP3> = ArrayList<MP3>()
+    private var mp3s: ArrayList<MP3> = ArrayList<MP3>()
     private var toPlayMp3Id = 0
+    private var randomize = false
 
     @RequiresApi(Build.VERSION_CODES.O)
     override fun onCreate(savedInstanceState: Bundle?) {
@@ -41,12 +43,16 @@ class PlayMusicActivity : AppCompatActivity() {
         var mp3: MP3 = MP3()
         if(intent.hasExtra(intentAlbumToPlay)){
             val album = intent.getSerializableExtra(intentAlbumToPlay) as Album
-            mp3s = FileSystemScanService.getMP3sFromAlbum(album)
+            mp3s = FileSystemScanService.getMP3sFromAlbum(album) as ArrayList<MP3>
             mp3 = mp3s[toPlayMp3Id]
             toPlayMp3Id++
 
         } else if(intent.hasExtra(intentSongToPlay)){
             mp3 = intent.getSerializableExtra(intentSongToPlay) as MP3
+        } else if(intent.hasExtra(intentRandomPlay)){
+            mp3s = FileSystemScanService.getMp3sFromMediaStore(this) as ArrayList<MP3>
+            mp3 = getRandomMP3()
+            randomize = true
         }
 
         songTitleView = findViewById(R.id.songTitle)
@@ -73,6 +79,12 @@ class PlayMusicActivity : AppCompatActivity() {
 
     }
 
+    private fun getRandomMP3() : MP3{
+        val randomIndex = (0..mp3s.size).random()
+        val randomMP3 = mp3s.removeAt(randomIndex)
+        return randomMP3
+    }
+
     private fun createMediaPlayer(mp3: MP3) : MediaPlayer{
         val songCover: Uri = Uri.parse("content://media/external/audio/albumart");
         val uriSongCover: Uri = ContentUris.withAppendedId(songCover, mp3.albumId)
@@ -88,6 +100,11 @@ class PlayMusicActivity : AppCompatActivity() {
             if(!mp3s.isEmpty() && mp3s.size != toPlayMp3Id){
                 var nextMp3 = mp3s[toPlayMp3Id]
                 toPlayMp3Id++
+                mp.release()
+                mp = createMediaPlayer(nextMp3)
+                mp.start()
+            } else if(!mp3s.isEmpty() && mp3s.size != toPlayMp3Id && randomize) {
+                var nextMp3 = getRandomMP3()
                 mp.release()
                 mp = createMediaPlayer(nextMp3)
                 mp.start()

@@ -13,14 +13,16 @@ import androidx.recyclerview.widget.RecyclerView
 import com.erw.mp3player.adapters.AlbumAdapter
 import com.erw.mp3player.adapters.OnAlbumItemClickListener
 import com.erw.mp3player.services.FileSystemScanService
+import com.google.android.material.floatingactionbutton.FloatingActionButton
 
 
 class AlbumNavigationActivity () : AppCompatActivity(), OnAlbumItemClickListener {
 
     companion object {
-            private const val STORAGE_PERMISSION_CODE = 100
+        private const val STORAGE_PERMISSION_CODE = 100
 
-            const val intentAlbumToPlay = "albumToPlay"
+        const val intentAlbumToPlay = "albumToPlay"
+        const val intentRandomPlay = "randomPlay"
     }
 
     override fun onCreate(savedInstanceState: Bundle?){
@@ -36,6 +38,15 @@ class AlbumNavigationActivity () : AppCompatActivity(), OnAlbumItemClickListener
         var adapter = AlbumAdapter(AlbumAdapter.ListDiff(), albumsToMp3s.keys.toTypedArray(), this)
         recyclerView.adapter = adapter
         recyclerView.layoutManager = LinearLayoutManager(this)
+
+        val fab = findViewById<FloatingActionButton>(R.id.randomize_fab)
+        fab.setOnClickListener {
+            val intent = Intent(this, PlayMusicActivity::class.java).apply {
+                putExtra(intentRandomPlay, true)
+            }
+
+            startActivity(intent)
+        }
     }
 
     override fun onAlbumClicked(album: FileSystemScanService.Album) {
