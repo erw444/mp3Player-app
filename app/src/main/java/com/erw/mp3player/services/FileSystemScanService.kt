@@ -67,6 +67,7 @@ object FileSystemScanService {
 
     fun getMp3sFromMediaStore(context:Context) : List<MP3> {
 
+        mp3s = ArrayList<MP3>()
         val collection = getExternalStorage()
 
         val projection = arrayOf(

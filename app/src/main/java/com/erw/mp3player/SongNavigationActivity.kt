@@ -46,7 +46,9 @@ class SongNavigationActivity: AppCompatActivity(), OnSongClickListener {
             putExtra(intentSongToPlay, mp3)
         }
         startActivity(intent)
+    }
 
-
+    override fun onBackPressed() {
+        finish()
     }
 }
