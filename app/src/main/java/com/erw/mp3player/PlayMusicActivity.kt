@@ -96,14 +96,14 @@ class PlayMusicActivity : AppCompatActivity() {
         totalTime = mp.duration
         mp.setOnCompletionListener {
             Log.i("ONComplete Media palyer", "onComplete hit")
-
+            
             if(!mp3s.isEmpty() && mp3s.size != toPlayMp3Id){
                 var nextMp3 = mp3s[toPlayMp3Id]
                 toPlayMp3Id++
                 mp.release()
                 mp = createMediaPlayer(nextMp3)
                 mp.start()
-            } else if(!mp3s.isEmpty() && mp3s.size != toPlayMp3Id && randomize) {
+            } else if(!mp3s.isEmpty() && randomize) {
                 var nextMp3 = getRandomMP3()
                 mp.release()
                 mp = createMediaPlayer(nextMp3)
