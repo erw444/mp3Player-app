@@ -43,7 +43,7 @@ class SongNavigationActivity: AppCompatActivity(), OnSongClickListener {
 
     override fun onItemClicked(mp3: FileSystemScanService.MP3) {
         val intent = Intent(this, PlayMusicActivity::class.java).apply {
-            putExtra("fileToPlay", mp3)
+            putExtra(intentSongToPlay, mp3)
         }
         startActivity(intent)
 
