@@ -82,7 +82,8 @@ object FileSystemScanService {
         )
 
         // Show only videos that are at least 5 minutes in duration.
-        val selection = "${MediaStore.Audio.Media.IS_MUSIC} = 1"
+        val selection = "${MediaStore.Audio.Media.IS_MUSIC} = 1 AND" +
+                " ${MediaStore.Audio.Media.DISPLAY_NAME} NOT LIKE'%.wma'"
 
         // Display videos in alphabetical order based on their display name.
         val sortOrder = "${MediaStore.Audio.Media.DISPLAY_NAME} ASC"

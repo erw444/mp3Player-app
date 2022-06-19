@@ -65,7 +65,7 @@ class PlayMusicActivity : AppCompatActivity() {
         mp.start()
 
         Thread(Runnable {
-            while(mp != null && !this.isFinishing){
+            while(mp != null && !this.isFinishing && mp.isPlaying){
                try {
                    var msg = Message()
                    msg.what = mp.currentPosition
@@ -90,24 +90,18 @@ class PlayMusicActivity : AppCompatActivity() {
         val uriSongCover: Uri = ContentUris.withAppendedId(songCover, mp3.albumId)
         albumArtView.setImageURI(uriSongCover)
         songTitleView.setText(mp3.name)
-        
-        mp = MediaPlayer.create(this, android.net.Uri.parse(mp3.uri))
+
+        var mp3URI = android.net.Uri.parse(mp3.uri)
+        mp = MediaPlayer.create(this, mp3URI)
         mp.setVolume(0.5f, 0.5f)
         totalTime = mp.duration
         mp.setOnCompletionListener {
             Log.i("ONComplete Media palyer", "onComplete hit")
-            
+
             if(!mp3s.isEmpty() && mp3s.size != toPlayMp3Id){
-                var nextMp3 = mp3s[toPlayMp3Id]
-                toPlayMp3Id++
-                mp.release()
-                mp = createMediaPlayer(nextMp3)
-                mp.start()
+                makeNextMediaPlayerSequential()
             } else if(!mp3s.isEmpty() && randomize) {
-                var nextMp3 = getRandomMP3()
-                mp.release()
-                mp = createMediaPlayer(nextMp3)
-                mp.start()
+                makeNextMediaPlayerRandom()
             } else {
                 playBtn.setBackgroundResource(R.drawable.play)
             }
@@ -131,6 +125,21 @@ class PlayMusicActivity : AppCompatActivity() {
         )
 
         return mp
+    }
+
+    fun makeNextMediaPlayerSequential(){
+        var nextMp3 = mp3s[toPlayMp3Id]
+        toPlayMp3Id++
+        mp.reset()
+        mp = createMediaPlayer(nextMp3)
+        mp.start()
+    }
+
+    fun makeNextMediaPlayerRandom(){
+        var nextMp3 = getRandomMP3()
+        mp.reset()
+        mp = createMediaPlayer(nextMp3)
+        mp.start()
     }
 
     override fun onBackPressed() {
@@ -179,6 +188,18 @@ class PlayMusicActivity : AppCompatActivity() {
         } else {
             mp.start()
             playBtn.setBackgroundResource(R.drawable.stop)
+        }
+    }
+
+    fun skipBtnClick(v: View) {
+        mp.pause()
+
+        if(!mp3s.isEmpty() && mp3s.size != toPlayMp3Id){
+            makeNextMediaPlayerSequential()
+        } else if(!mp3s.isEmpty() && randomize) {
+            makeNextMediaPlayerRandom()
+        } else {
+            playBtn.setBackgroundResource(R.drawable.play)
         }
     }
 }
