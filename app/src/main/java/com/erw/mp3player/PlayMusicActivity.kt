@@ -194,10 +194,10 @@ class PlayMusicActivity : AppCompatActivity() {
     fun skipBtnClick(v: View) {
         mp.pause()
 
-        if(!mp3s.isEmpty() && mp3s.size != toPlayMp3Id){
-            makeNextMediaPlayerSequential()
-        } else if(!mp3s.isEmpty() && randomize) {
+        if(!mp3s.isEmpty() && randomize) {
             makeNextMediaPlayerRandom()
+        }else if(!mp3s.isEmpty() && mp3s.size != toPlayMp3Id){
+            makeNextMediaPlayerSequential()
         } else {
             playBtn.setBackgroundResource(R.drawable.play)
         }
