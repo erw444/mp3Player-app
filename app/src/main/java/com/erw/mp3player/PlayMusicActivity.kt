@@ -57,6 +57,14 @@ class PlayMusicActivity : AppCompatActivity() {
 
         songTitleView = findViewById(R.id.songTitle)
         albumArtView = findViewById(R.id.albumArt)
+        albumArtView.setOnTouchListener(
+            object: OnSwipeTouchListener(this) {
+                override fun  onSwipeLeft() {
+                    playNextSong();
+                }
+            }
+        )
+
         positionBar = findViewById(R.id.positionBar)
         mp = createMediaPlayer(mp3)
 
@@ -192,6 +200,10 @@ class PlayMusicActivity : AppCompatActivity() {
     }
 
     fun skipBtnClick(v: View) {
+        playNextSong();
+    }
+
+    fun playNextSong(){
         mp.pause()
 
         if(!mp3s.isEmpty() && randomize) {
