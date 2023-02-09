@@ -47,7 +47,7 @@ object FileSystemScanService {
 
         albumsToMp3s = mp3s.stream().collect(
             Collectors.groupingBy { mp3 -> Album(mp3.albumId, mp3.albumName) }
-        )
+        ).toSortedMap(compareBy { album -> album.name })
 
         return albumsToMp3s
     }
