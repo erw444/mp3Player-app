@@ -24,6 +24,7 @@ class PlayMusicActivity : AppCompatActivity() {
 
     private lateinit var mp: MediaPlayer
     private lateinit var playBtn: Button
+    private lateinit var restartBtn: Button
     private lateinit var positionBar: SeekBar
     private lateinit var elapsedTimeLabel: TextView
     private lateinit var remainingTimeLabel: TextView
@@ -186,6 +187,13 @@ class PlayMusicActivity : AppCompatActivity() {
         timeLabel += sec
 
         return timeLabel
+    }
+
+    fun restartBtnClick(v: View) {
+        mp.seekTo(0)
+
+        mp.start()
+        playBtn.setBackgroundResource(R.drawable.stop)
     }
 
     fun playBtnClick(v: View) {
