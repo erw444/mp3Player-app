@@ -27,8 +27,7 @@ object FileSystemScanService {
                    val isMusic: Int = 0
                    ) : Serializable
 
-    data class Album(val albumId: Long,
-                     val name: String = ""
+    data class Album(val name: String = ""
                      ) : Serializable
 
     init {
@@ -46,7 +45,7 @@ object FileSystemScanService {
         getMp3sFromMediaStore(context)
 
         albumsToMp3s = mp3s.stream().collect(
-            Collectors.groupingBy { mp3 -> Album(mp3.albumId, mp3.albumName) }
+            Collectors.groupingBy { mp3 -> Album(mp3.albumName) }
         ).toSortedMap(compareBy { album -> album.name })
 
         return albumsToMp3s
@@ -133,27 +132,4 @@ object FileSystemScanService {
 
         return mp3s
     }
-
-    fun getMusicDirectory() : Array<File>{
-        val location = "sdcard/Music"
-        //val location = "storage/self/primary/Music/BadAss Boss Themes III/"
-
-        val rootFile = File(location)
-        val isFile = rootFile.isFile
-        val isDirectory = rootFile.isDirectory
-        val isHidden = rootFile.isHidden
-        val files = rootFile.list()
-        sort(files)
-        var filesInDirectory = rootFile.listFiles()
-        sort(filesInDirectory)
-        return filesInDirectory
-    }
-
-    fun getFilesInDirectory(directoryPath: String?) : Array<File> {
-        val directoryFile = File(directoryPath)
-        val files = directoryFile.list()
-        var filesInDirectory = directoryFile.listFiles()
-        return filesInDirectory
-    }
-
 }
