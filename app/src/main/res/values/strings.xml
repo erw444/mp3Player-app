@@ -18,4 +18,14 @@
     <string name="accept_button_text">Accept</string>
     <string name="reject_button_text">Reject</string>
     <string name="randomize_button_text">Randomize!</string>
+
+    <string name="storage_permission_denied">Audio permission denied; no music can be shown</string>
+    <string name="albums_title">Albums</string>
+    <string name="shuffle_all">Shuffle all songs</string>
+    <string name="play_album">Play</string>
+    <string name="album_art">Album art</string>
+    <string name="play_pause">Play or pause</string>
+    <string name="restart">Restart song</string>
+    <string name="skip">Next song</string>
+    <string name="time_zero">0:00</string>
 </resources>

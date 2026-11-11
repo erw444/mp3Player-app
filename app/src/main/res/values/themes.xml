@@ -1,16 +1,20 @@
-<resources xmlns:tools="http://schemas.android.com/tools">
-    <!-- Base application theme. -->
-    <style name="Theme.MP3Player" parent="Theme.MaterialComponents.DayNight.DarkActionBar">
-        <!-- Primary brand color. -->
-        <item name="colorPrimary">@color/purple_500</item>
-        <item name="colorPrimaryVariant">@color/purple_700</item>
-        <item name="colorOnPrimary">@color/white</item>
-        <!-- Secondary brand color. -->
-        <item name="colorSecondary">@color/teal_200</item>
-        <item name="colorSecondaryVariant">@color/teal_700</item>
-        <item name="colorOnSecondary">@color/black</item>
-        <!-- Status bar color. -->
-        <item name="android:statusBarColor" tools:targetApi="l">?attr/colorPrimaryVariant</item>
-        <!-- Customize your theme here. -->
+<resources>
+    <style name="Theme.MP3Player" parent="Theme.Material3.Dark.NoActionBar">
+        <item name="colorPrimary">@color/halloween_orange</item>
+        <item name="colorOnPrimary">@color/halloween_black</item>
+        <item name="colorPrimaryContainer">@color/halloween_orange_dim</item>
+        <item name="colorOnPrimaryContainer">@color/halloween_orange_light</item>
+        <item name="colorSecondary">@color/halloween_orange_light</item>
+        <item name="colorOnSecondary">@color/halloween_black</item>
+        <item name="android:colorBackground">@color/halloween_black</item>
+        <item name="colorSurface">@color/halloween_surface</item>
+        <item name="colorSurfaceVariant">@color/halloween_surface_high</item>
+        <item name="colorOnBackground">@color/halloween_on_surface</item>
+        <item name="colorOnSurface">@color/halloween_on_surface</item>
+        <item name="colorOnSurfaceVariant">@color/halloween_on_surface_dim</item>
+        <item name="colorOutline">@color/halloween_orange_dim</item>
+        <item name="android:windowBackground">@color/halloween_black</item>
+        <item name="android:statusBarColor">@android:color/transparent</item>
+        <item name="android:navigationBarColor">@android:color/transparent</item>
     </style>
 </resources>

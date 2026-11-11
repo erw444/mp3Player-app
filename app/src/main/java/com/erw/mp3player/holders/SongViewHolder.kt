@@ -14,6 +14,7 @@ class SongViewHolder(itemView: View) : RecyclerView.ViewHolder(itemView) {
 
     init {
         listItemView = itemView.findViewById(R.id.list_item_name)
+        itemView.findViewById<View>(R.id.list_item_play_image).visibility = View.GONE
     }
 
     fun bind(song: FileSystemScanService.MP3, clickListener: OnSongClickListener) {

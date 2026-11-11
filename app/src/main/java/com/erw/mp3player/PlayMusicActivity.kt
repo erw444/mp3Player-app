@@ -1,225 +1,171 @@
 package com.erw.mp3player
 
-import android.annotation.SuppressLint
 import android.content.ContentUris
 import android.media.MediaPlayer
 import android.net.Uri
-import android.os.*
-import android.util.Log
-import android.view.View
-import android.widget.Button
-import android.widget.ImageView
+import android.os.Bundle
 import android.widget.SeekBar
-import android.widget.TextView
-import androidx.annotation.RequiresApi
+import androidx.activity.enableEdgeToEdge
 import androidx.appcompat.app.AppCompatActivity
+import androidx.core.content.IntentCompat
+import androidx.lifecycle.Lifecycle
+import androidx.lifecycle.lifecycleScope
+import androidx.lifecycle.repeatOnLifecycle
 import com.erw.mp3player.AlbumNavigationActivity.Companion.intentAlbumToPlay
 import com.erw.mp3player.AlbumNavigationActivity.Companion.intentRandomPlay
 import com.erw.mp3player.SongNavigationActivity.Companion.intentSongToPlay
+import com.erw.mp3player.databinding.ActivityPlayMusicBinding
 import com.erw.mp3player.services.FileSystemScanService
 import com.erw.mp3player.services.FileSystemScanService.Album
 import com.erw.mp3player.services.FileSystemScanService.MP3
+import kotlinx.coroutines.Dispatchers
+import kotlinx.coroutines.delay
+import kotlinx.coroutines.launch
+import kotlinx.coroutines.withContext
 
 class PlayMusicActivity : AppCompatActivity() {
 
-    private lateinit var mp: MediaPlayer
-    private lateinit var playBtn: Button
-    private lateinit var restartBtn: Button
-    private lateinit var positionBar: SeekBar
-    private lateinit var elapsedTimeLabel: TextView
-    private lateinit var remainingTimeLabel: TextView
-    private lateinit var albumArtView: ImageView
-    private lateinit var songTitleView: TextView
-    private var totalTime: Int = 0
-    private var mp3s: ArrayList<MP3> = ArrayList<MP3>()
-    private var toPlayMp3Id = 0
+    private lateinit var binding: ActivityPlayMusicBinding
+    private var player: MediaPlayer? = null
+    private var queue: List<MP3> = emptyList()
+    private var queueIndex = 0
     private var randomize = false
 
-    @RequiresApi(Build.VERSION_CODES.O)
     override fun onCreate(savedInstanceState: Bundle?) {
+        enableEdgeToEdge()
         super.onCreate(savedInstanceState)
 
-        setContentView(R.layout.activity_play_music)
+        binding = ActivityPlayMusicBinding.inflate(layoutInflater)
+        setContentView(binding.root)
+        binding.root.applySystemBarInsets()
 
-        var mp3: MP3 = MP3()
-        if(intent.hasExtra(intentAlbumToPlay)){
-            val album = intent.getSerializableExtra(intentAlbumToPlay) as Album
-            mp3s = FileSystemScanService.getMP3sFromAlbum(album) as ArrayList<MP3>
-            mp3 = mp3s[toPlayMp3Id]
-            toPlayMp3Id++
+        binding.albumArt.setOnTouchListener(object : OnSwipeTouchListener(this) {
+            override fun onSwipeLeft() = playNextSong()
+        })
+        binding.playBtn.setOnClickListener { togglePlayback() }
+        binding.restartBtn.setOnClickListener { restart() }
+        binding.SkipBtn.setOnClickListener { playNextSong() }
+        binding.positionBar.setOnSeekBarChangeListener(object : SeekBar.OnSeekBarChangeListener {
+            override fun onProgressChanged(seekBar: SeekBar?, progress: Int, fromUser: Boolean) {
+                if (fromUser) player?.seekTo(progress)
+            }
 
-        } else if(intent.hasExtra(intentSongToPlay)){
-            mp3 = intent.getSerializableExtra(intentSongToPlay) as MP3
-        } else if(intent.hasExtra(intentRandomPlay)){
-            mp3s = FileSystemScanService.getMp3sFromMediaStore(this) as ArrayList<MP3>
-            mp3 = getRandomMP3()
-            randomize = true
+            override fun onStartTrackingTouch(seekBar: SeekBar?) = Unit
+            override fun onStopTrackingTouch(seekBar: SeekBar?) = Unit
+        })
+
+        lifecycleScope.launch {
+            queue = withContext(Dispatchers.IO) { buildQueue() }
+            if (queue.isEmpty()) finish() else playCurrent()
         }
 
-        songTitleView = findViewById(R.id.songTitle)
-        albumArtView = findViewById(R.id.albumArt)
-        albumArtView.setOnTouchListener(
-            object: OnSwipeTouchListener(this) {
-                override fun  onSwipeLeft() {
-                    playNextSong();
+        lifecycleScope.launch {
+            repeatOnLifecycle(Lifecycle.State.STARTED) {
+                while (true) {
+                    updateProgress()
+                    delay(500)
                 }
-            }
-        )
-
-        positionBar = findViewById(R.id.positionBar)
-        mp = createMediaPlayer(mp3)
-
-        playBtn = findViewById(R.id.playBtn)
-        playBtn.setBackgroundResource(R.drawable.stop)
-        mp.start()
-
-        Thread(Runnable {
-            while(mp != null && !this.isFinishing && mp.isPlaying){
-               try {
-                   var msg = Message()
-                   msg.what = mp.currentPosition
-                   handler.sendMessage(msg)
-                   Thread.sleep(1000)
-               } catch (e: InterruptedException){
-
-               }
-            }
-        }).start()
-
-    }
-
-    private fun getRandomMP3() : MP3{
-        val randomIndex = (0..mp3s.size).random()
-        val randomMP3 = mp3s.removeAt(randomIndex)
-        return randomMP3
-    }
-
-    private fun createMediaPlayer(mp3: MP3) : MediaPlayer{
-        val songCover: Uri = Uri.parse("content://media/external/audio/albumart");
-        val uriSongCover: Uri = ContentUris.withAppendedId(songCover, mp3.albumId)
-        albumArtView.setImageURI(uriSongCover)
-        songTitleView.setText(mp3.name)
-
-        var mp3URI = android.net.Uri.parse(mp3.uri)
-        mp = MediaPlayer.create(this, mp3URI)
-        mp.setVolume(0.5f, 0.5f)
-        totalTime = mp.duration
-        mp.setOnCompletionListener {
-            Log.i("ONComplete Media palyer", "onComplete hit")
-
-            if(!mp3s.isEmpty() && mp3s.size != toPlayMp3Id){
-                makeNextMediaPlayerSequential()
-            } else if(!mp3s.isEmpty() && randomize) {
-                makeNextMediaPlayerRandom()
-            } else {
-                playBtn.setBackgroundResource(R.drawable.play)
             }
         }
+    }
 
-        positionBar.max = totalTime
-        positionBar.setOnSeekBarChangeListener(
-            object: SeekBar.OnSeekBarChangeListener {
-                override fun onProgressChanged(seekBar: SeekBar?, progress: Int, fromUser: Boolean) {
-                    if(fromUser) {
-                        mp.seekTo(progress)
-                    }
+    private fun buildQueue(): List<MP3> {
+        val song = IntentCompat.getSerializableExtra(intent, intentSongToPlay, MP3::class.java)
+        val album = IntentCompat.getSerializableExtra(intent, intentAlbumToPlay, Album::class.java)
+        return when {
+            album != null -> {
+                if (FileSystemScanService.albumsToMp3s.isEmpty()) {
+                    FileSystemScanService.getAlbumsToMP3sFromMediaStore(applicationContext)
                 }
-
-                override fun onStartTrackingTouch(p0: SeekBar?) {
-                }
-
-                override fun onStopTrackingTouch(p0: SeekBar?) {
-                }
+                FileSystemScanService.getMP3sFromAlbum(album)
             }
-        )
-
-        return mp
-    }
-
-    fun makeNextMediaPlayerSequential(){
-        var nextMp3 = mp3s[toPlayMp3Id]
-        toPlayMp3Id++
-        mp.reset()
-        mp = createMediaPlayer(nextMp3)
-        mp.start()
-    }
-
-    fun makeNextMediaPlayerRandom(){
-        var nextMp3 = getRandomMP3()
-        mp.reset()
-        mp = createMediaPlayer(nextMp3)
-        mp.start()
-    }
-
-    override fun onBackPressed() {
-        super.onBackPressed()
-        if (mp.isPlaying) {
-            mp.stop()
+            song != null -> listOf(song)
+            intent.hasExtra(intentRandomPlay) -> {
+                randomize = true
+                FileSystemScanService.getMp3sFromMediaStore(applicationContext).shuffled()
+            }
+            else -> emptyList()
         }
-        mp.release()
-        finish()
     }
 
-    @SuppressLint("HandlerLeak")
-    var handler = object: Handler(Looper.getMainLooper()) {
-        override fun handleMessage(msg: Message) {
-            var currentPosition = msg.what
-
-            positionBar.progress = currentPosition
-
-            var elapsedTime = createTimeLabel(currentPosition)
-            elapsedTimeLabel = findViewById(R.id.elapsedTimeLabel)
-            elapsedTimeLabel.text = elapsedTime
-
-            var remainingTime = createTimeLabel(totalTime - currentPosition)
-            remainingTimeLabel = findViewById(R.id.remainingTimeLabel)
-            remainingTimeLabel.text = remainingTime
+    private fun playCurrent() {
+        val mp3 = queue[queueIndex]
+        val albumArt = ContentUris.withAppendedId(Uri.parse("content://media/external/audio/albumart"), mp3.albumId)
+        binding.albumArt.setImageURI(albumArt)
+        if (binding.albumArt.drawable == null) {
+            binding.albumArt.setImageResource(R.drawable.ic_album_placeholder)
         }
+        binding.songTitle.text = mp3.name
+
+        player?.release()
+        player = MediaPlayer.create(this, Uri.parse(mp3.uri))?.apply {
+            setVolume(0.5f, 0.5f)
+            setOnCompletionListener { advance(userInitiated = false) }
+            binding.positionBar.max = duration
+            start()
+        }
+        if (player == null) {
+            advance(userInitiated = false)
+            return
+        }
+        showPlaying(true)
+    }
+
+    private fun advance(userInitiated: Boolean) {
+        val hasNext = queueIndex + 1 < queue.size
+        when {
+            hasNext -> queueIndex++
+            randomize -> {
+                queue = queue.shuffled()
+                queueIndex = 0
+            }
+            else -> {
+                if (!userInitiated) showPlaying(false)
+                return
+            }
+        }
+        playCurrent()
+    }
+
+    private fun playNextSong() {
+        if (queue.isNotEmpty()) advance(userInitiated = true)
+    }
+
+    private fun restart() {
+        player?.apply {
+            seekTo(0)
+            start()
+        }
+        showPlaying(true)
+    }
+
+    private fun togglePlayback() {
+        val mp = player ?: return
+        if (mp.isPlaying) mp.pause() else mp.start()
+        showPlaying(mp.isPlaying)
+    }
+
+    private fun showPlaying(playing: Boolean) {
+        binding.playBtn.setIconResource(if (playing) R.drawable.ic_pause else R.drawable.ic_play)
+    }
+
+    private fun updateProgress() {
+        val mp = player ?: return
+        val position = mp.currentPosition
+        binding.positionBar.progress = position
+        binding.elapsedTimeLabel.text = createTimeLabel(position)
+        binding.remainingTimeLabel.text = createTimeLabel(mp.duration - position)
     }
 
     fun createTimeLabel(time: Int): String {
-        var timeLabel = ""
-        var min  = time / 1000 / 60
-        var sec = time / 1000 % 60
-
-        timeLabel = "$min:"
-        if (sec < 10) timeLabel += "0"
-        timeLabel += sec
-
-        return timeLabel
+        val min = time / 1000 / 60
+        val sec = time / 1000 % 60
+        return "$min:${sec.toString().padStart(2, '0')}"
     }
 
-    fun restartBtnClick(v: View) {
-        mp.seekTo(0)
-
-        mp.start()
-        playBtn.setBackgroundResource(R.drawable.stop)
-    }
-
-    fun playBtnClick(v: View) {
-
-        if (mp.isPlaying) {
-            mp.pause()
-            playBtn.setBackgroundResource(R.drawable.play)
-        } else {
-            mp.start()
-            playBtn.setBackgroundResource(R.drawable.stop)
-        }
-    }
-
-    fun skipBtnClick(v: View) {
-        playNextSong();
-    }
-
-    fun playNextSong(){
-        mp.pause()
-
-        if(!mp3s.isEmpty() && randomize) {
-            makeNextMediaPlayerRandom()
-        }else if(!mp3s.isEmpty() && mp3s.size != toPlayMp3Id){
-            makeNextMediaPlayerSequential()
-        } else {
-            playBtn.setBackgroundResource(R.drawable.play)
-        }
+    override fun onDestroy() {
+        player?.release()
+        player = null
+        super.onDestroy()
     }
 }

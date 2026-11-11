@@ -3,89 +3,78 @@ package com.erw.mp3player
 import android.Manifest
 import android.content.Intent
 import android.content.pm.PackageManager
+import android.os.Build
 import android.os.Bundle
 import android.widget.Toast
+import androidx.activity.enableEdgeToEdge
+import androidx.activity.result.contract.ActivityResultContracts
 import androidx.appcompat.app.AppCompatActivity
-import androidx.core.app.ActivityCompat
 import androidx.core.content.ContextCompat
+import androidx.lifecycle.lifecycleScope
 import androidx.recyclerview.widget.LinearLayoutManager
-import androidx.recyclerview.widget.RecyclerView
 import com.erw.mp3player.adapters.AlbumAdapter
 import com.erw.mp3player.adapters.OnAlbumItemClickListener
+import com.erw.mp3player.databinding.ActivityAlbumNavigationBinding
 import com.erw.mp3player.services.FileSystemScanService
-import com.google.android.material.floatingactionbutton.FloatingActionButton
+import kotlinx.coroutines.Dispatchers
+import kotlinx.coroutines.launch
+import kotlinx.coroutines.withContext
 
-
-class AlbumNavigationActivity () : AppCompatActivity(), OnAlbumItemClickListener {
+class AlbumNavigationActivity : AppCompatActivity(), OnAlbumItemClickListener {
 
     companion object {
-        private const val STORAGE_PERMISSION_CODE = 100
-
         const val intentAlbumToPlay = "albumToPlay"
         const val intentRandomPlay = "randomPlay"
+
+        val audioPermission: String =
+            if (Build.VERSION.SDK_INT >= Build.VERSION_CODES.TIRAMISU) {
+                Manifest.permission.READ_MEDIA_AUDIO
+            } else {
+                Manifest.permission.READ_EXTERNAL_STORAGE
+            }
     }
 
-    override fun onCreate(savedInstanceState: Bundle?){
+    private lateinit var binding: ActivityAlbumNavigationBinding
+
+    private val permissionLauncher =
+        registerForActivityResult(ActivityResultContracts.RequestPermission()) { granted ->
+            if (granted) loadAlbums() else Toast.makeText(this, R.string.storage_permission_denied, Toast.LENGTH_LONG).show()
+        }
+
+    override fun onCreate(savedInstanceState: Bundle?) {
+        enableEdgeToEdge()
         super.onCreate(savedInstanceState)
 
-       checkPermission(Manifest.permission.READ_EXTERNAL_STORAGE, STORAGE_PERMISSION_CODE)
+        binding = ActivityAlbumNavigationBinding.inflate(layoutInflater)
+        setContentView(binding.root)
+        binding.root.applySystemBarInsets()
 
-        setContentView(R.layout.activity_album_navigation)
+        binding.contentFileNavigation.recyclerListView.layoutManager = LinearLayoutManager(this)
+        binding.randomizeFab.setOnClickListener {
+            startActivity(Intent(this, PlayMusicActivity::class.java).putExtra(intentRandomPlay, true))
+        }
 
-        val albumsToMp3s = FileSystemScanService.getAlbumsToMP3sFromMediaStore(this)
+        if (hasAudioPermission()) loadAlbums() else permissionLauncher.launch(audioPermission)
+    }
 
-        val recyclerView = findViewById<RecyclerView>(R.id.recycler_list_view)
-        var adapter = AlbumAdapter(AlbumAdapter.ListDiff(), albumsToMp3s.keys.toTypedArray(), this)
-        recyclerView.adapter = adapter
-        recyclerView.layoutManager = LinearLayoutManager(this)
+    private fun hasAudioPermission() =
+        ContextCompat.checkSelfPermission(this, audioPermission) == PackageManager.PERMISSION_GRANTED
 
-        val fab = findViewById<FloatingActionButton>(R.id.randomize_fab)
-        fab.setOnClickListener {
-            val intent = Intent(this, PlayMusicActivity::class.java).apply {
-                putExtra(intentRandomPlay, true)
+    private fun loadAlbums() {
+        lifecycleScope.launch {
+            val albums = withContext(Dispatchers.IO) {
+                FileSystemScanService.getAlbumsToMP3sFromMediaStore(applicationContext).keys
             }
-
-            startActivity(intent)
+            binding.contentFileNavigation.recyclerListView.adapter =
+                AlbumAdapter(AlbumAdapter.ListDiff(), albums.toTypedArray(), this@AlbumNavigationActivity)
         }
     }
 
     override fun onAlbumClicked(album: FileSystemScanService.Album) {
-        val intent = Intent(this, SongNavigationActivity::class.java).apply {
-            putExtra("album", album)
-        }
-
-        startActivity(intent)
+        startActivity(Intent(this, SongNavigationActivity::class.java).putExtra("album", album))
     }
 
     override fun onPlayButtonClicked(album: FileSystemScanService.Album) {
-        val intent = Intent(this, PlayMusicActivity::class.java).apply {
-            putExtra(intentAlbumToPlay, album)
-        }
-
-        startActivity(intent)
+        startActivity(Intent(this, PlayMusicActivity::class.java).putExtra(intentAlbumToPlay, album))
     }
-
-
-
-    // Function to check and request permission.
-    private fun checkPermission(permission: String, requestCode: Int) {
-        if (ContextCompat.checkSelfPermission(this, permission) == PackageManager.PERMISSION_DENIED) {
-            // Requesting the permission
-            ActivityCompat.requestPermissions(this, arrayOf(permission), requestCode)
-        }
-    }
-
-    override fun onRequestPermissionsResult(requestCode: Int,
-                                            permissions: Array<String>,
-                                            grantResults: IntArray) {
-        super.onRequestPermissionsResult(requestCode, permissions, grantResults)
-        if (requestCode == STORAGE_PERMISSION_CODE) {
-            if (grantResults.isNotEmpty() && grantResults[0] == PackageManager.PERMISSION_GRANTED) {
-                Toast.makeText(this, "Storage Permission Granted", Toast.LENGTH_SHORT).show()
-            } else {
-                Toast.makeText(this, "Storage Permission Denied", Toast.LENGTH_SHORT).show()
-            }
-        }
-    }
-
 }
